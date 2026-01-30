@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Shatakshi Computer 🖥️ - Jhiljhile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --esewa-color: #60bb46;
+            --whatsapp-color: #25d366;
+            --light-bg: #f8f9fa;
+            --border-color: #eeeeee;
+            --text-gray: #757575;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+            --card-btn-bg: #f1f3f4;
+            --status-open: #4caf50;
+            --status-closed: #f44336;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f6; padding-bottom: 120px; color: #333; line-height: 1.6; touch-action: manipulation; }
+
+        header {
+            padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-color); position: sticky; top: 0;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 1000;
+        }
+
+        .header-right { display: flex; align-items: center; gap: 18px; }
+        .three-dot-btn { cursor: pointer; padding: 5px; font-size: 20px; color: #444; }
+        
+        .dropdown-menu {
+            position: absolute; top: 65px; right: 15px; background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 12px;
+            display: none; flex-direction: column; min-width: 180px; z-index: 5000;
+            border: 1px solid #eee;
+        }
+        .dropdown-menu.active { display: flex; }
+        .dropdown-item { padding: 12px 20px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+
+        .search-container { padding: 10px 15px; background: white; }
+        .search-box { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #eee; background: #f9f9f9; display: flex; align-items: center; }
+        .search-box input { border: none; background: transparent; width: 100%; margin-left: 10px; outline: none; flex: 1; }
+
+        .featured-slider { padding: 15px; display: flex; overflow-x: auto; gap: 15px; scrollbar-width: none; }
+        .featured-slider::-webkit-scrollbar { display: none; }
+        .slide-card { min-width: 85%; height: 150px; border-radius: 20px; background: linear-gradient(45deg, var(--primary-green), #43a047); color: white; padding: 20px; display: flex; flex-direction: column; justify-content: center; position: relative; box-shadow: 0 10px 20px rgba(46, 125, 50, 0.2); }
+        .slide-card i { position: absolute; right: 20px; font-size: 60px; opacity: 0.2; }
+
+        .category-bar { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; background: white; scrollbar-width: none; }
+        .pill { background: #fff; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid #eee; cursor: pointer; }
+        .pill.active { background: var(--primary-green); color: white; }
+
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; min-height: 400px; }
+        .card { border-radius: 18px; padding: 15px; position: relative; background: #fff; box-shadow: var(--shadow); transition: 0.3s; }
+        
+        .skeleton { background: #eee; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); border-radius: 18px; background-size: 200% 100%; animation: 1.5s shine linear infinite; height: 220px; }
+        @keyframes shine { to { background-position-x: -200%; } }
+
+        .img-box { width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; border-radius: 12px; background: #fdfdfd; }
+        .img-box img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        
+        .card-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-add-cart { background: var(--card-btn-bg); border: none; padding: 10px; border-radius: 10px; cursor: pointer; width: 45px; display: flex; align-items: center; justify-content: center; }
+        .btn-buy-now { background: var(--esewa-color); color: white; border: none; flex: 1; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+        #cartDrawer { position: fixed; bottom: -100%; left: 0; width: 100%; height: 75%; background: white; z-index: 4000; transition: 0.5s ease; padding: 25px; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -10px 30px rgba(0,0,0,0.15); overflow-y: auto; }
+        #cartDrawer.open { bottom: 0; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 85px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { text-align: center; color: var(--text-gray); font-size: 11px; flex: 1; cursor: pointer; text-decoration: none;}
+        .nav-item i { display: block; font-size: 24px; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary-green); font-weight: bold; }
+        
+        .float-contact { position: fixed; right: 20px; bottom: 100px; background: var(--whatsapp-color); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 999; text-decoration: none; border: 3px solid white; }
+        #toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 30px; border-radius: 50px; font-size: 14px; display: none; z-index: 7000; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
+        
+        .full-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 6000; display: none; overflow-y: auto; }
+        .modal-content { padding: 25px; max-width: 600px; margin: 0 auto; }
+        .close-modal { position: sticky; top: 20px; left: 20px; background: #eee; border: none; font-size: 20px; cursor: pointer; z-index: 6001; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 15px; color: white; font-weight: bold; font-size: 12px; margin-top: 5px; }
+        .status-open { background-color: var(--status-open); }
+        .status-closed { background-color: var(--status-closed); }
+        .info-card { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid var(--primary-green); }
+    </style>
+</head>
+<body onload="initApp()">
+
+    <header>
+        <div onclick="location.reload()" style="font-size: 20px; font-weight: 900; color: var(--primary-green); cursor: pointer;">Shatakshi Computer 🖥️</div>
+        <div class="header-right">
+            <div onclick="toggleCart()" style="position:relative; cursor:pointer;">
+                <i class="fas fa-shopping-basket" style="font-size:20px;"></i>
+                <span id="cartCountBadge" style="position:absolute; top:-5px; right:-5px; background:red; color:white; font-size:10px; padding:2px 6px; border-radius:10px; display:none;">0</span>
+            </div>
+            <div class="three-dot-btn" onclick="toggleDropdown(event)"><i class="fas fa-ellipsis-v"></i></div>
+            <div class="dropdown-menu" id="headerDropdown">
+                <div class="dropdown-item" onclick="openAbout()"><i class="fas fa-info-circle"></i> About Store</div>
+                <div class="dropdown-item" onclick="toggleCart()"><i class="fas fa-shopping-bag"></i> My Cart</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search Laptop, CCTV, Printer..." onkeyup="filterProducts()">
+        </div>
+    </div>
+
+    <div class="featured-slider">
+        <div class="slide-card" style="background: linear-gradient(45deg, #111, #444);"><i class="fas fa-video"></i><h2>CCTV Security</h2><p>Protect your home with HD Cameras.</p></div>
+        <div class="slide-card"><i class="fas fa-tools"></i><h2>Expert Repairing</h2><p>Laptops & Printers fixed at Shivasatakshi 8.</p></div>
+        <div class="slide-card" style="background: linear-gradient(45deg, #1e3c72, #2a5298);"><i class="fas fa-print"></i><h2>New Printers</h2><p>Best price near Chimeki Bank.</p></div>
+    </div>
+
+    <div class="category-bar">
+        <div class="pill active" onclick="setCategoryFilter('All Products', this)">All Products</div>
+        <div class="pill" onclick="setCategoryFilter('CCTV Camera', this)">CCTV Camera 📸</div>
+        <div class="pill" onclick="setCategoryFilter('Laptops', this)">Laptops</div>
+        <div class="pill" onclick="setCategoryFilter('Printers', this)">Printers</div>
+        <div class="pill" onclick="setCategoryFilter('Repairing', this)">Repairing</div>
+    </div>
+
+    <div class="product-grid" id="productGrid">
+        <div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+
+    <div id="aboutModal" class="full-modal">
+        <button class="close-modal" onclick="closeModal('aboutModal')"><i class="fas fa-times"></i></button>
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width:70px; height:70px; background:var(--primary-green); color:white; border-radius:20px; display:inline-flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:10px;"><i class="fas fa-store"></i></div>
+                <h2 style="color:var(--primary-green);">New Satakshi Computer</h2>
+                <div id="storeStatus"></div>
+            </div>
+            <div class="info-card">
+                <p><strong><i class="fas fa-user"></i> Owner:</strong> Kamal Bhandari</p>
+                <p><strong><i class="fas fa-phone"></i> Contact:</strong> <a href="tel:9816910549" style="text-decoration:none; color:var(--primary-green);">981-6910549</a></p>
+            </div>
+            <div class="info-card">
+                <p><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> Jhiljhile, Shivasatakshi-8, Jhapa</p>
+                <p><strong><i class="fas fa-landmark"></i> Landmark:</strong> Adjacent to Chimeki Bank</p>
+            </div>
+            <iframe width="100%" height="250" style="border-radius:15px; border:1px solid #ddd; margin-top:10px;" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14256.703279313273!2d87.81845688715822!3d26.63481230000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39e59345c2286e11%3A0x6b8f15b8041a8767!2sNew%20Satakshi%20Computer!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp"></iframe>
+        </div>
+    </div>
+
+    <div id="productModal" class="full-modal">
+        <button class="close-modal" onclick="closeModal('productModal')"><i class="fas fa-times"></i></button>
+        <div class="modal-content" id="modalBody"></div>
+    </div>
+
+    <div id="cartDrawer">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Your Cart</h2>
+            <button onclick="toggleCart()" style="border:none; background:#eee; width:30px; height:30px; border-radius:50%;">×</button>
+        </div>
+        <div id="cartItemsList"></div>
+        <div style="margin-top:20px; background: #f9f9f9; padding: 20px; border-radius: 15px;">
+            <div style="display:flex; justify-content: space-between; font-weight: 800; font-size:18px;">
+                <span>Total:</span><span id="cartTotal" style="color:var(--primary-green);">Rs 0</span>
+            </div>
+            <button class="btn-buy-now" style="background:var(--whatsapp-color); width: 100%; padding: 15px; margin-top: 15px;" onclick="checkoutWhatsApp()">Order via WhatsApp</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeAll()"></div>
+    <div id="toast">Item Added!</div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="location.reload()"><i class="fas fa-home"></i>Shop</div>
+        <div class="nav-item" onclick="window.open('tel:9816910549')"><i class="fas fa-phone"></i>Call</div>
+        <div class="nav-item" onclick="toggleCart()"><i class="fas fa-shopping-bag"></i>Cart</div>
+        <div class="nav-item" onclick="openAbout()"><i class="fas fa-info-circle"></i>About</div>
+    </nav>
+
+    <a href="https://wa.me/9779816910549" class="float-contact"><i class="fab fa-whatsapp"></i></a>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCL-OgHfVUD8IsTSEnunqL6bfs6TKg9W5s",
+            authDomain: "liga2-3dc2f.firebaseapp.com",
+            databaseURL: "https://liga2-3dc2f-default-rtdb.firebaseio.com",
+            projectId: "liga2-3dc2f",
+            storageBucket: "liga2-3dc2f.firebasestorage.app",
+            messagingSenderId: "588466896158",
+            appId: "1:588466896158:web:78a107297e68276f575608"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let allProducts = {};
+        let cart = [];
+        let activeCategory = 'All Products';
+
+        function initApp() {
+            updateStatus();
+            // Fast Fetch
+            db.ref('products').once('value').then(snap => {
+                allProducts = snap.val() || {};
+                filterProducts();
+            });
+            // Background Live Update
+            db.ref('products').on('value', snap => {
+                allProducts = snap.val() || {};
+                filterProducts();
+            });
+        }
+
+        function updateStatus() {
+            const h = new Date().getHours();
+            const status = document.getElementById('storeStatus');
+            if (h >= 9 && h < 19) status.innerHTML = `<span class="status-badge status-open">Open Now</span>`;
+            else status.innerHTML = `<span class="status-badge status-closed">Closed Now</span>`;
+        }
+
+        function filterProducts() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = "";
+            Object.keys(allProducts).reverse().forEach(id => {
+                const p = allProducts[id];
+                if((activeCategory === 'All Products' || p.category === activeCategory) && (p.name.toLowerCase().includes(q))) {
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div class="card">
+                            <div class="img-box" onclick="viewDetails('${id}')"><img src="${p.img}" loading="lazy"></div>
+                            <h3 style="font-size:13px; margin:8px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.category === 'CCTV Camera' ? '📸' : ''} ${p.name}</h3>
+                            <p style="font-weight:bold; color:var(--primary-green);">Rs ${p.price}</p>
+                            <div class="card-actions">
+                                <button class="btn-add-cart" onclick="addToCart('${id}')"><i class="fas fa-cart-plus"></i></button>
+                                <button class="btn-buy-now" onclick="whatsappMe('${p.name}', '${p.price}')">Order</button>
+                            </div>
+                        </div>`);
+                }
+            });
+        }
+
+        function addToCart(id) {
+            cart.push(allProducts[id]);
+            const badge = document.getElementById('cartCountBadge');
+            badge.innerText = cart.length;
+            badge.style.display = 'block';
+            showToast("Added to Cart!");
+        }
+
+        function toggleCart() {
+            const drawer = document.getElementById('cartDrawer');
+            drawer.classList.toggle('open');
+            document.getElementById('overlay').style.display = drawer.classList.contains('open') ? 'block' : 'none';
+            const list = document.getElementById('cartItemsList');
+            list.innerHTML = cart.length ? `<button onclick="cart=[];toggleCart()" style="color:red; background:none; border:none; margin-bottom:10px;">Clear All</button>` : "Your cart is empty.";
+            let total = 0;
+            cart.forEach(i => {
+                total += parseInt(i.price);
+                list.innerHTML += `<div class="cart-item"><span>${i.name}</span><b>Rs ${i.price}</b></div>`;
+            });
+            document.getElementById('cartTotal').innerText = "Rs " + total;
+        }
+
+        function viewDetails(id) {
+            const p = allProducts[id];
+            document.getElementById('modalBody').innerHTML = `
+                <img src="${p.img}" style="width:100%; border-radius:15px; margin-bottom:15px;">
+                <h2>${p.name}</h2>
+                <p style="font-size:20px; color:var(--primary-green); font-weight:800; margin:10px 0;">Rs ${p.price}</p>
+                <div style="background:#f0f0f0; padding:15px; border-radius:10px; margin:15px 0;"><strong>Details:</strong><br>${p.features || 'Available at store'}</div>
+                <button class="btn-buy-now" style="background:var(--whatsapp-color); width:100%; padding:15px;" onclick="whatsappMe('${p.name}', '${p.price}')">Message about this</button>`;
+            document.getElementById('productModal').style.display = "block";
+        }
+
+        function setCategoryFilter(cat, el) {
+            activeCategory = cat;
+            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            filterProducts();
+        }
+
+        function toggleDropdown(e) { e.stopPropagation(); document.getElementById('headerDropdown').classList.toggle('active'); }
+        function openAbout() { document.getElementById('aboutModal').style.display = 'block'; document.getElementById('headerDropdown').classList.remove('active'); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeAll() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; }
+        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display='none', 2000); }
+        function whatsappMe(n, p) { window.open(`https://wa.me/9779816910549?text=I'm interested in: ${n} (Rs ${p})`); }
+        function checkoutWhatsApp() { if(!cart.length) return alert("Cart empty"); let m = cart.map(i => "- " + i.name).join("\n"); window.open(`https://wa.me/9779816910549?text=Order Request:\n${m}`); }
+        window.onclick = () => document.getElementById('headerDropdown').classList.remove('active');
+    </script>
+</body>
+</html>
+
+
+
+<script>
+// 1. Your Firebase Configuration (From Screenshot 6)
+const firebaseConfig = {
+    apiKey: "AIzaSyCL-OgHfVUD8IsTSEnunqL6bfs6TKg9W5s",
+    authDomain: "liga2-3dc2f.firebaseapp.com",
+    projectId: "liga2-3dc2f",
+    storageBucket: "liga2-3dc2f.firebasestorage.app",
+    messagingSenderId: "588466896158",
+    appId: "1:588466896158:web:51c18a67205aeb6c045d0f"
+};
+
+// 2. Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// 3. Login Function (Best for Mobile)
+function login() {
+    auth.signInWithRedirect(provider);
+}
+
+// 4. Logout Function
+function logout() {
+    auth.signOut().then(() => {
+        console.log("User signed out");
+    });
+}
+
+// 5. Handle the Auth State (Run this on page load)
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        console.log("Logged in as:", user.displayName);
+        console.log("Email:", user.email);
+        console.log("Photo URL:", user.photoURL);
+        // You can now update your UI with the user's name
+    } else {
+        console.log("No user is signed in.");
+    }
+});
+
+// 6. Catch Redirect Errors (Required to see if domain is blocked)
+auth.getRedirectResult().catch((error) => {
+    if (error.code === 'auth/unauthorized-domain') {
+        alert("Error: mirak626.github.io is not authorized in Firebase Console Settings.");
+    }
+});
+</script>
